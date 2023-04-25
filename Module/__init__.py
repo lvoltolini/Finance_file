@@ -28,7 +28,10 @@ packages_install_names = {
     'scipy' : 'scipy',
     'pypfopt': 'PyPortfolioOpt',
     'functools' : 'functools',
-    'streamlit_folium' : 'streamlit_folium'    
+    'yfinance' : 'yfinance',
+    'bcb': 'python-bcb',
+    'investpy': 'investpy',
+    'datetime': 'datetime'
 }
 
 
@@ -66,7 +69,11 @@ packages_import_names = {
     'seaborn' : 'sns',
     'statsmodels' : 'sm',
     'scipy.linalg' : 'ln',
-    'functools' : 'functools'    
+    'functools' : 'functools',
+    'yfinance': 'yf',
+    'investpy': 'investpy',
+    'bcb.sgs': 'sgs',
+    'datetime': 'dt'
 }
 
 ## Funzione per importare i pacchetti:
@@ -81,6 +88,10 @@ def import_packs(packages):
 "Loop per l'importazione:"
 "--------------------------------------------------------------------------------"
 
+print(80*'-')
 import_packs(packages_import_names)
 
+if __name__ == '__main__':
+    for i in packages_import_names.values():
+        print(i)
 
