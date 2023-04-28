@@ -3,6 +3,40 @@ from Module import pd, np, plt, sns, sm, ln, dt
 from Module import yf, investpy, sgs
 
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
+' # Creazione delle cartelle # '
+'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
+
+# Nomi delle cartelle:
+
+folders = [
+    '//Regression//',
+    '//Regression//Daily//',
+    '//Regression//Month//',
+    '//Regression//Quad//',
+    '//Regression//Year//',
+]
+
+subfolders = ['ret//', 'exp//', 'fac//']
+
+# Creazione di una lista di cartelle:
+
+for folder in folders[1:]:
+    for subfolder in subfolders:
+        folders.append(folder + subfolder)
+        # I dati verrano creati anche per le Stock separate
+        if subfolder in subfolders[1:]:
+            folders.append(folder + subfolder + 'Stocks//')
+        
+folders.sort()
+
+def Create_folder(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+for path in folders:
+    Create_folder(path)
+    
+'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 ' # Info_database # '
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 
@@ -185,6 +219,43 @@ def merge_nefins(urls):
     
     return merged_df
 
+def added_minus(df):
+    
+    # Creare una coppia di df
+    df1 = df.copy()
+    
+    # Creare le colonne
+    df1['ibov_minus_Rf'] = df1['ibov'] - df['Risk_free']
+    df1['esg_minus_Rf'] = df1['esg'] - df['Risk_free']
+    df1['Rm'] = df1['Rm_minus_Rf'] + df1['Risk_free']
+    
+    # Creare le colonne per gli altri dati.
+    df1['r_ibov_minus_Rf'] = -1 + (df1['ibov']+1)/(df['Risk_free']+1)
+    df1['r_esg_minus_Rf'] = -1 + (df1['esg']+1)/(df['Risk_free']+1)
+    df1['r_Rm'] =  -1 + (df1['Rm_minus_Rf'] + 1)*(df1['Risk_free'] + 1)
+    
+    return df1
 
+'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
+' # Important Parameters: # '
+'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
+
+# df Nefin
 nefin = merge_nefins(urls)
+nefin = added_minus(nefin)
 
+# Betas e nome di Regressioni.
+betas = {'be1': ['Rm_minus_Rf', 'esg_minus_Rf'],
+     'be2': ['Rm_minus_Rf', 'SMB', 'HML', 'esg_minus_Rf'],
+     'be3': ['Rm_minus_Rf', 'SMB', 'HML', 'WML', 'IML', 'esg_minus_Rf'],
+     'bi1': ['Rm_minus_Rf', 'esg_minus_Rf', 'ibov_minus_Rf'], 
+     'bi2': ['Rm_minus_Rf', 'SMB', 'HML', 'esg_minus_Rf', 'ibov_minus_Rf'],
+     'bi3': ['Rm_minus_Rf', 'SMB', 'HML', 'WML', 'IML', 'esg_minus_Rf', 'ibov_minus_Rf'],
+     'bn1': ['esg_minus_Rf'], 
+     'bn2': ['esg_minus_Rf', 'SMB', 'HML'],
+     'bn3': ['esg_minus_Rf', 'SMB', 'HML', 'WML', 'IML'], 
+     'br1': ['Rm_minus_Rf'],
+     'br2': ['Rm_minus_Rf', 'SMB', 'HML'],
+     'br3': ['Rm_minus_Rf', 'SMB', 'HML', 'WML', 'IML']}
+
+reg = list(betas.keys())
