@@ -59,6 +59,9 @@ def new_pct(df):
     
     return df
 
+def intersection(x: list, y: list):
+    return [item for item in x if item in y]
+
 def resample_returns(df, period:str):
     # Funziona solo per "raggruppare" i dati (da giornaliero a mensile, da giornaliero ad annuale), 
     # non per "dividere" (da annuale a mensile, da mensile a giornaliero).
@@ -130,31 +133,6 @@ def read_Economatica(path: str, price_ret: str, index = [0], row = [3]):
     df = df.dropna(how = 'all')
 
     return df
-
-# Economatica:
-
-raw_path = f'{os.getcwd()}//Raw//'
-raw_path_files = [raw_path + i for i in os.listdir(raw_path)]
-raw_path_files
-  
-## Prendre i prezzi ed i ritorni
-
-price = [path for path in raw_path_files if 'price' in path]
-ret = [path for path in raw_path_files if 'ret' in path]
-
-## Rinomiare gli df
-
-p21, p22, p41 = (
-    lock_dates(read_Economatica(price[0], 'price')), 
-    lock_dates(read_Economatica(price[1], 'price')), 
-    lock_dates(read_Economatica(price[2], 'price'))
-)
-
-r21, r22, r41 = (
-    lock_dates(read_Economatica(ret[0], 'ret')/100), 
-    lock_dates(read_Economatica(ret[1], 'ret')/100), 
-    lock_dates(read_Economatica(ret[2], 'ret')/100)
-)
 
 # Nefin: 
 
@@ -252,10 +230,44 @@ def added_minus(df):
 ' # Important Parameters: # '
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 
+# Economatica:
+
+raw_path = f'{os.getcwd()}//Raw//'
+raw_path_files = [raw_path + i for i in os.listdir(raw_path)]
+raw_path_files
+  
+## Prendre i prezzi ed i ritorni
+
+price = [path for path in raw_path_files if 'price' in path]
+ret = [path for path in raw_path_files if 'ret' in path]
+
+## Rinomiare gli df
+
+p21, p22, p41 = (
+    lock_dates(read_Economatica(price[0], 'price')), 
+    lock_dates(read_Economatica(price[1], 'price')), 
+    lock_dates(read_Economatica(price[2], 'price'))
+)
+
+r21, r22, r41 = (
+    lock_dates(read_Economatica(ret[0], 'ret')/100), 
+    lock_dates(read_Economatica(ret[1], 'ret')/100), 
+    lock_dates(read_Economatica(ret[2], 'ret')/100)
+)
+
+# Ritorno degli Stocks:
+
+stocks = pd.concat(
+    [
+        r21, r22, r41
+    ], axis = 1
+).T.drop_duplicates().T
+
 # df Nefin
 nefin = merge_nefins(urls) # Creare lo df
 nefin = added_minus(nefin) # Adizionare lo "minus"
 nefin = lock_dates(nefin) # Lock the dates to '2014-05-02':'2022-08-31'
+nefin = nefin.drop([i for i in nefin.index if i not in stocks.index])
 
 # Betas e nome di Regressioni.
 betas = {'be1': ['Rm_minus_Rf', 'esg_minus_Rf'],
