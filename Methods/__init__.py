@@ -30,8 +30,9 @@ for folder in folders[1:]:
 folders.sort()
 
 def Create_folder(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
+    full_path = os.getcwd() + path
+    if not os.path.exists(full_path):
+        os.makedirs(full_path)
 
 for path in folders:
     Create_folder(path)
@@ -42,7 +43,7 @@ for path in folders:
 
 extra_phrases = {
     'ret' : 'Retorno\ndo fechamento\nem 1 dias\nEm moeda orig\najust p/ prov\n',
-    'price' : 'Retorno\ndo fechamento\nem 1 dias\nEm moeda orig\najust p/ prov\n'
+    'price' : 'PU\najust p/ prov\nEm moeda orig\n'
 }
     
 def to_float(df):
@@ -58,13 +59,24 @@ def new_pct(df):
     
     return df
 
+def resample_returns(df, period:str):
+    # Funziona solo per "raggruppare" i dati (da giornaliero a mensile, da giornaliero ad annuale), 
+    # non per "dividere" (da annuale a mensile, da mensile a giornaliero).
+    "Monthly: 'M'"
+    "Quadrimester: '4M'"
+    df1 = df.copy()
+    df1 = df1+1
+    df1 = df1.resample(period).prod()
+    df1 = df1 - 1
+    return df1
+
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 ' # Dates # '
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 
 # Important dates:
 previous_day, next_day = '2014-04-30', '2022-09-01'
-start_date, end_date = '2014-05-02', '2022-09-01'
+start_date, end_date = '2014-05-02', '2022-08-31'
 mid_date = '2015-05-02'
 midmid_date = '2016-05-02'
 
@@ -133,15 +145,15 @@ ret = [path for path in raw_path_files if 'ret' in path]
 ## Rinomiare gli df
 
 p21, p22, p41 = (
-    read_Economatica(price[0], 'price'), 
-    read_Economatica(price[1], 'price'), 
-    read_Economatica(price[2], 'price')
+    lock_dates(read_Economatica(price[0], 'price')), 
+    lock_dates(read_Economatica(price[1], 'price')), 
+    lock_dates(read_Economatica(price[2], 'price'))
 )
 
 r21, r22, r41 = (
-    read_Economatica(ret[0], 'ret'), 
-    read_Economatica(ret[1], 'ret'), 
-    read_Economatica(ret[2], 'ret')
+    lock_dates(read_Economatica(ret[0], 'ret')/100), 
+    lock_dates(read_Economatica(ret[1], 'ret')/100), 
+    lock_dates(read_Economatica(ret[2], 'ret')/100)
 )
 
 # Nefin: 
@@ -241,8 +253,9 @@ def added_minus(df):
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 
 # df Nefin
-nefin = merge_nefins(urls)
-nefin = added_minus(nefin)
+nefin = merge_nefins(urls) # Creare lo df
+nefin = added_minus(nefin) # Adizionare lo "minus"
+nefin = lock_dates(nefin) # Lock the dates to '2014-05-02':'2022-08-31'
 
 # Betas e nome di Regressioni.
 betas = {'be1': ['Rm_minus_Rf', 'esg_minus_Rf'],
