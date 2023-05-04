@@ -2,17 +2,13 @@ from Module import os, sys
 from Module import pd, np, plt, sns, sm, ln, dt
 from Module import yf, investpy, sgs
 
-<<<<<<< HEAD
 from . import OLS
 
 
-=======
->>>>>>> 9331341e504ce846a92c9e49cb47bf435a684f2c
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 ' # Creazione delle cartelle # '
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 
-<<<<<<< HEAD
 # ottieni il percorso assoluto della directory che contiene lo script principale
 dir_path = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(dir_path)
@@ -20,23 +16,14 @@ parent_dir = os.path.dirname(dir_path)
 # imposta la directory di lavoro corrente sulla directory che contiene lo script principale
 os.chdir(parent_dir)
 
-=======
->>>>>>> 9331341e504ce846a92c9e49cb47bf435a684f2c
 # Nomi delle cartelle:
 
 folders = [
     '//Regression//',
-<<<<<<< HEAD
     '//Regression//D//',
     '//Regression//M//',
     '//Regression//4M//',
     '//Regression//Y//',
-=======
-    '//Regression//Daily//',
-    '//Regression//Month//',
-    '//Regression//Quad//',
-    '//Regression//Year//',
->>>>>>> 9331341e504ce846a92c9e49cb47bf435a684f2c
 ]
 
 subfolders = ['ret//', 'exp//', 'fac//']
@@ -82,13 +69,10 @@ def new_pct(df):
     
     return df
 
-<<<<<<< HEAD
 def intersection(x: list, y: list):
     # Restituisce l'intersezione di due liste
     return [item for item in x if item in y]
 
-=======
->>>>>>> 9331341e504ce846a92c9e49cb47bf435a684f2c
 def resample_returns(df, period:str):
     # Funziona solo per "raggruppare" i dati (da giornaliero a mensile, da giornaliero ad annuale), 
     # non per "dividere" (da annuale a mensile, da mensile a giornaliero).
@@ -128,7 +112,6 @@ def lock_dates(df):
     
     return df
 
-<<<<<<< HEAD
 def add_year(date, add = 0):
     # Aggiunge un anno alla data
     new_date = dt.date(
@@ -147,8 +130,6 @@ def rem_year(date, add = 0):
     ) + dt.timedelta(days = -365 + add)
     return new_date
 
-=======
->>>>>>> 9331341e504ce846a92c9e49cb47bf435a684f2c
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 ' # Reading the files # '
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
@@ -182,34 +163,6 @@ def read_Economatica(path: str, price_ret: str, index = [0], row = [3]):
 
     return df
 
-<<<<<<< HEAD
-=======
-# Economatica:
-
-raw_path = f'{os.getcwd()}//Raw//'
-raw_path_files = [raw_path + i for i in os.listdir(raw_path)]
-raw_path_files
-  
-## Prendre i prezzi ed i ritorni
-
-price = [path for path in raw_path_files if 'price' in path]
-ret = [path for path in raw_path_files if 'ret' in path]
-
-## Rinomiare gli df
-
-p21, p22, p41 = (
-    lock_dates(read_Economatica(price[0], 'price')), 
-    lock_dates(read_Economatica(price[1], 'price')), 
-    lock_dates(read_Economatica(price[2], 'price'))
-)
-
-r21, r22, r41 = (
-    lock_dates(read_Economatica(ret[0], 'ret')/100), 
-    lock_dates(read_Economatica(ret[1], 'ret')/100), 
-    lock_dates(read_Economatica(ret[2], 'ret')/100)
-)
-
->>>>>>> 9331341e504ce846a92c9e49cb47bf435a684f2c
 # Nefin: 
 
 urls = [
@@ -306,7 +259,6 @@ def added_minus(df):
 ' # Important Parameters: # '
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 
-<<<<<<< HEAD
 # Dates
 date_format = '%Y-%m-%d'
 
@@ -343,13 +295,10 @@ stocks = pd.concat(
     ], axis = 1
 ).T.drop_duplicates().T
 
-=======
->>>>>>> 9331341e504ce846a92c9e49cb47bf435a684f2c
 # df Nefin
 nefin = merge_nefins(urls) # Creare lo df
 nefin = added_minus(nefin) # Adizionare lo "minus"
 nefin = lock_dates(nefin) # Lock the dates to '2014-05-02':'2022-08-31'
-<<<<<<< HEAD
 nefin = nefin.drop([i for i in nefin.index if i not in stocks.index])
 
 # Betas e nome di Regressioni.
@@ -403,18 +352,18 @@ parameters = {
 
 # with open("search_keys.json", "w") as f:
 #     json.dump(keys, f, indent=4)
-
-class search():
+    
+class Search():
     @staticmethod
-    def search(ritorno, freq, portfolio, folder = 'reg'):
-        parent_dir = os.getcwd()
-        dict_names = {
-            'f': 'factors.csv',
-            'e': 'expected.csv'
+    def search(ret, freq, ext = '.parquet'):
+        ret_dict = {
+            'f': ['fac', 'factors'],
+            'e': ['exp', 'expected']
         }
-        path = f'{parent_dir}//Regression//{freq}//{ritorno}//{dict_names[ritorno]}'
-        
-        return path
+        path = f'{os.getcwd()}//Regression//{freq}//{ret_dict[ret][0]}//{ret_dict[ret][1]}{ext}'
+        try: df = pd.read_parquet(path)
+        except: df = pd.read_csv(path)
+        return df
 
     
 
@@ -552,21 +501,3 @@ def ols_shift(stk,
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 ' # Efficient Frontier: # '
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
-=======
-
-# Betas e nome di Regressioni.
-betas = {'be1': ['Rm_minus_Rf', 'esg_minus_Rf'],
-     'be2': ['Rm_minus_Rf', 'SMB', 'HML', 'esg_minus_Rf'],
-     'be3': ['Rm_minus_Rf', 'SMB', 'HML', 'WML', 'IML', 'esg_minus_Rf'],
-     'bi1': ['Rm_minus_Rf', 'esg_minus_Rf', 'ibov_minus_Rf'], 
-     'bi2': ['Rm_minus_Rf', 'SMB', 'HML', 'esg_minus_Rf', 'ibov_minus_Rf'],
-     'bi3': ['Rm_minus_Rf', 'SMB', 'HML', 'WML', 'IML', 'esg_minus_Rf', 'ibov_minus_Rf'],
-     'bn1': ['esg_minus_Rf'], 
-     'bn2': ['esg_minus_Rf', 'SMB', 'HML'],
-     'bn3': ['esg_minus_Rf', 'SMB', 'HML', 'WML', 'IML'], 
-     'br1': ['Rm_minus_Rf'],
-     'br2': ['Rm_minus_Rf', 'SMB', 'HML'],
-     'br3': ['Rm_minus_Rf', 'SMB', 'HML', 'WML', 'IML']}
-
-reg = list(betas.keys())
->>>>>>> 9331341e504ce846a92c9e49cb47bf435a684f2c

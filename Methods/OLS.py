@@ -14,8 +14,16 @@ if 'ipykernel' in sys.modules:
 else:
     # Se siamo in un programma, importiamo os.system('cls')
     def clear_output():
-        os.system('cls')
+        os.system('cls' if os.name == 'nt' else 'clear')
 
+def search(ret, freq):
+    ret_dict = {
+        'f': ['fac', 'factors'],
+        'e': ['exp', 'expected']
+    }
+    path = f'{os.getcwd()}//Regression//{freq}//{ret_dict[ret][0]}//{ret_dict[ret][1]}.parquet'
+    df = pd.read_parquet(path)
+    return df
 
 
 class OLS:
@@ -147,42 +155,139 @@ class OLS:
         factors.to_csv(path)
     
     @staticmethod
+    def start_regression(X: pd.DataFrame, stocks: pd.DataFrame, betas: dict, freq: str):
+        # Esegue la regressione lineare per ogni azione
+        for stock in stocks.columns:
+            OLS.ols(X, stocks[stock], betas, freq = freq)
+            
+    @staticmethod
     def merge_factors(freq):
+        # Ottiene il percorso della directory contenente i dati sui fattori di frequenza specificata
         path = f'{os.getcwd()}//Regression//{freq}//fac//Stocks//'
+        # Ottiene il percorso della directory padre dei dati sui fattori di frequenza specificata
         parent_path = f'{os.getcwd()}//Regression//{freq}//fac//'
-
+        
+        # Ottiene i nomi dei file dei fattori di ogni azione nella directory dei dati sui fattori di frequenza specificata
         factors_of_stocks = [
             filename[:-4] for filename in os.listdir(path)
         ]
-
+        
+        # Ottiene i dati sui fattori per ogni azione e li inserisce in una lista
         list_of_factors_by_stock = [
             pd.read_csv(path + filename + '.csv', index_col = [0], header = [0,1])
             for filename in factors_of_stocks
         ]
-
+        
+        # Concatena tutti i dati sui fattori in un unico DataFrame
         df = pd.concat(list_of_factors_by_stock, axis = 1, keys = factors_of_stocks)
         
         return df
     
     @staticmethod
     def save_factors(df, freq):
-        exp_path = f'{os.getcwd()}//Regression//{freq}//fac//'
-        df.to_csv(f'{exp_path}factors.csv')
+        # Ottiene il percorso della directory contenente i dati sui fattori di frequenza specificata
+        dac_path = f'{os.getcwd()}//Regression//{freq}//fac//'
         
+        # Salva il DataFrame dei fattori in formato Parquet nella directory dei dati sui fattori di frequenza specificata
+        df.to_parquet(f'{dac_path}factors.parquet')
     
-    
-    @staticmethod
-    def start_regression(X: pd.DataFrame, stocks: pd.DataFrame, betas: dict, freq: str):
-        for stock in stocks.columns:
-            OLS.ols(X, stocks[stock], betas, freq = freq)
+    def save_expected(factors, indices, freq):
+        # Copia gli indici e i fattori e modifica il formato degli indici in formato datetime
+        indices, factors = indices.copy(), factors.copy()
+        indices.index, factors.index = pd.to_datetime(indices.index), pd.to_datetime(factors.index)
+        
+        # Sposta gli indici di un giorno in avanti e seleziona solo gli indici corrispondenti ai dati sui fattori
+        indices = indices.shift().loc[factors.index]
+        factors = factors.loc[indices.index]
+        
+        # Imposta l'indice dei fattori come l'indice degli indici
+        factors.index = indices.index
+        
+        # Moltiplica ogni valore dei fattori per il valore corrispondente degli indici
+        df = factors.multiply(indices, level = 2)
+        
+        # Somma i valori dei fattori per ogni coppia di (data, azione) e salva il risultato in un DataFrame
+        df_sum = df.groupby(level = [0,1], axis = 1).sum()
+        
+        # Salva il DataFrame dei fattori attesi in formato Parquet nella directory dei dati sui fattori di frequenza specificata
+        exp_path = f'{os.getcwd()}//Regression//{freq}//exp//'
+        df_sum.to_parquet(f'{exp_path}expected.parquet')
         
     @staticmethod
     def DEBUG_OLS_INFO():
+        # Stampa un messaggio di debug sulla regressione
         div = 80*'-'
         print(
             div,
             'La Regressione sta per avviare. Continua? [S/n]: ', 
             div, sep = '\n')
         input('Risposta: ')
+
+
+
+
+
+    # @staticmethod
+    # def merge_factors(freq):
+    #     path = f'{os.getcwd()}//Regression//{freq}//fac//Stocks//'
+    #     parent_path = f'{os.getcwd()}//Regression//{freq}//fac//'
+
+    #     factors_of_stocks = [
+    #         filename[:-4] for filename in os.listdir(path)
+    #     ]
+
+    #     list_of_factors_by_stock = [
+    #         pd.read_csv(path + filename + '.csv', index_col = [0], header = [0,1])
+    #         for filename in factors_of_stocks
+    #     ]
+
+    #     df = pd.concat(list_of_factors_by_stock, axis = 1, keys = factors_of_stocks)
         
+    #     return df
     
+    # @staticmethod
+    # def save_factors(df, freq):
+    #     dac_path = f'{os.getcwd()}//Regression//{freq}//fac//'
+    #     df.to_parquet(f'{dac_path}factors.parquet')
+    
+    # def save_expected(factors, indices, freq):
+    #     indices, factors = indices.copy(), factors.copy()
+    #     indices.index, factors.index = pd.to_datetime(indices.index), pd.to_datetime(factors.index)
+    #     indices = indices.shift().loc[factors.index]
+    #     factors = factors.loc[indices.index]
+    #     factors.index = indices.index
+    #     df = factors.multiply(indices, level = 2)
+    #     df_sum = df.groupby(level = [0,1], axis = 1).sum()
+    #     clear_output()
+    #     print(df_sum)
+    #     exp_path = f'{os.getcwd()}//Regression//{freq}//exp//'
+    #     df_sum.to_parquet(f'{exp_path}expected.parquet')
+    
+    # def show_expected(factors, indices):
+    #     indices = indices.shift().loc[factors.index]
+    #     factors = factors.loc[indices.index]
+    #     factors.index = indices.index
+    #     df = pd.DataFrame(np.nan, index = indices.index, columns = factors.columns)
+    #     for column in factors.columns:
+    #         if column[2] in indices.columns:
+    #             clear_output()
+    #             print(80*'-')
+    #             print(column)
+    #             print(80*'-')
+    #             df.loc[:, column] = factors[column].multiply(indices[column[2]])
+    #     return df
+    # @staticmethod
+    # def start_regression(X: pd.DataFrame, stocks: pd.DataFrame, betas: dict, freq: str):
+    #     for stock in stocks.columns:
+    #         OLS.ols(X, stocks[stock], betas, freq = freq)
+        
+    # @staticmethod
+    # def DEBUG_OLS_INFO():
+    #     div = 80*'-'
+    #     print(
+    #         div,
+    #         'La Regressione sta per avviare. Continua? [S/n]: ', 
+    #         div, sep = '\n')
+    #     input('Risposta: ')
+    
+   

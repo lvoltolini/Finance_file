@@ -45,7 +45,6 @@ except: fatal_error
 ## Questa funzione controlla i pacchetti necessari.
 
 def check_packages(packages):
-<<<<<<< HEAD
     cont = 0
     for package in packages:
         try: importlib.import_module(package)
@@ -59,16 +58,6 @@ def check_packages(packages):
 
 if check_packages(packages_install_names) > 0:
     fatal_error()
-=======
-    for package in packages:
-        try: importlib.import_module(package)
-        except: print(f'Error: The package {packages[package]} is not installed. Try installing it using the command "pip3 install {package}"')
-        else: print(f'Successfully imported package {package}.')
-        
-# Ora controlliamo se ci sono errori in qualche pacchetto:
-
-check_packages(packages_install_names)
->>>>>>> 9331341e504ce846a92c9e49cb47bf435a684f2c
 
 ## Importazione dei pacchetti
 
@@ -84,11 +73,8 @@ packages_import_names = {
     'matplotlib.pyplot' : 'plt',
     'seaborn' : 'sns',
     'statsmodels' : 'sm',
-<<<<<<< HEAD
     'statsmodels.regression.linear_model': 'lm',
     'statsmodels.tools.tools': 'tool',
-=======
->>>>>>> 9331341e504ce846a92c9e49cb47bf435a684f2c
     'scipy.linalg' : 'ln',
     'functools' : 'functools',
     'yfinance': 'yf',
