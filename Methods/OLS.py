@@ -196,6 +196,10 @@ class OLS:
         indices, factors = indices.copy(), factors.copy()
         indices.index, factors.index = pd.to_datetime(indices.index), pd.to_datetime(factors.index)
         
+        # Resample i ritorni:
+        if freq != 'D':
+            from Methods import resample_returns
+            indices = resample_returns(indices, freq)
         # Sposta gli indici di un giorno in avanti e seleziona solo gli indici corrispondenti ai dati sui fattori
         indices = indices.shift().loc[factors.index]
         factors = factors.loc[indices.index]
@@ -212,7 +216,23 @@ class OLS:
         # Salva il DataFrame dei fattori attesi in formato Parquet nella directory dei dati sui fattori di frequenza specificata
         exp_path = f'{os.getcwd()}//Regression//{freq}//exp//'
         df_sum.to_parquet(f'{exp_path}expected.parquet')
-        
+    
+    @staticmethod
+    def SAVE_ALL_ITEMS_IN_OLS(X, Y, betas, freq):
+        # First, we calculate and separate each factor from each stock separatedly:
+        OLS.start_regression(X, Y, betas, freq  = freq)
+        # Then we merge all of them into a single file:
+        OLS.save_factors(
+                         OLS.merge_factors(freq),
+                         freq
+                         )
+        # Now we calculate expected values of stocks:
+        OLS.save_expected(
+            search('f', freq),
+            X,
+            freq)
+    
+    
     @staticmethod
     def DEBUG_OLS_INFO():
         # Stampa un messaggio di debug sulla regressione
@@ -221,7 +241,17 @@ class OLS:
             div,
             'La Regressione sta per avviare. Continua? [S/n]: ', 
             div, sep = '\n')
-        input('Risposta: ')
+        return input('Risposta: ')
+    
+    @staticmethod
+    def DEBUG_FIX_FACTORS_AND_EXPECTED():
+        # Stampa un messaggio di debug sulla regressione
+        div = 80*'-'
+        print(
+            div,
+            'Il programma sta per avviare la  Continua? [S/n]: ', 
+            div, sep = '\n')
+        return input('Risposta: ')
 
 
 
