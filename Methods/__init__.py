@@ -288,9 +288,9 @@ r21, r22, r41 = (
     lock_dates(read_Economatica(ret[2], 'ret')/100)
 )
 
-update_asai_pcar = False
+update_asai_pcar = input('Fix the Data? [S/n]')
 
-if update_asai_pcar:
+if update_asai_pcar.upper() == 'S':
     r21['PCAR3'][:'2020-02-27'] = np.nan
     r22['PCAR3'][:'2020-02-27'] = np.nan
     r21['ASAI3'][:'2021-03-01'] = np.nan
