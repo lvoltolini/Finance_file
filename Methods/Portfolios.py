@@ -164,7 +164,7 @@ class Portfolios():
                                                     df.columns)
         # print(results_df)
         # Loop over each day in the index
-        for date in df.loc[start_date:].index:
+        for date in df.loc[expected.index].loc[start_date:].index:
             # Slice the DataFrame to only include data up to the current date
             df_sliced = df.loc[:date]
             # Check which stocks have expected values for this day

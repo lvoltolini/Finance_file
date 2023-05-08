@@ -20,6 +20,7 @@ div = 80 * '-'
 # # Frequenze dei dati
 # freqs= ['D', 'M', '4M', 'Y']
 
+
 # Chiedo all'utente se vuole avviare la modalità debug della regressione
 answer_ols_debug_info = OLS.DEBUG_OLS_INFO()
 
@@ -40,16 +41,16 @@ if answer_eff_debug_info == 's':
     for element in Search.names_for_eff():
         Portfolios.save_efficient_frontier_calculations(
             Search.search(element[0], element[1]),
-                          element[0],
-                          element[1], 
-                          element[2], 
-                          element[3], 
-                          element[4], 
-                          element[5])
+                        element[0],
+                        element[1], 
+                        element[2], 
+                        element[3], 
+                        element[4], 
+                        element[5])
         
 elif answer_eff_debug_info in portfolios:
     # Salvo tutti i risultati dalle informazioni fornite
-    ret = input('Provide un portafoglio: ')
+    ret = answer_eff_debug_info
     freq = input('Provide una frequenza: ')
     Portfolios.save_efficient_frontier_calculations(
         Search.search(ret, freq),

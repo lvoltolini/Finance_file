@@ -288,6 +288,17 @@ r21, r22, r41 = (
     lock_dates(read_Economatica(ret[2], 'ret')/100)
 )
 
+update_asai_pcar = False
+
+if update_asai_pcar:
+    r21['PCAR3'][:'2020-02-27'] = np.nan
+    r22['PCAR3'][:'2020-02-27'] = np.nan
+    r21['ASAI3'][:'2021-03-01'] = np.nan
+
+    p21['PCAR3'][:'2020-02-27'] = np.nan
+    p22['PCAR3'][:'2020-02-27'] = np.nan
+    p21['ASAI3'][:'2021-03-01'] = np.nan
+    
 # Ritorno degli Stocks:
 
 stocks = pd.concat(
