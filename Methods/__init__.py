@@ -3,7 +3,7 @@ from Module import pd, np, plt, sns, sm, ln, dt
 from Module import yf, investpy, sgs
 
 from . import OLS
-
+from . import Portfolios
 
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 ' # Creazione delle cartelle # '
@@ -19,6 +19,8 @@ os.chdir(parent_dir)
 # Nomi delle cartelle:
 
 folders = [
+    '//Portfolios//'
+    '//Errors//'
     '//Regression//',
     '//Regression//D//',
     '//Regression//M//',
@@ -30,7 +32,7 @@ subfolders = ['ret//', 'exp//', 'fac//']
 
 # Creazione di una lista di cartelle:
 
-for folder in folders[1:]:
+for folder in folders[3:]:
     for subfolder in subfolders:
         folders.append(folder + subfolder)
         # I dati verrano creati anche per le Stock separate
@@ -46,7 +48,6 @@ def Create_folder(path):
 
 for path in folders:
     Create_folder(path)
-    
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 ' # Info_database # '
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
@@ -336,7 +337,17 @@ parameters = {
     '100' : 10.0
 }
 
+# La finestra di osservazione:
+window = ['Mov', 'Exp']
 
+# Portafogli: 
+portfolios = ['r21', 'r22', 'r41']
+
+# Frequenze:
+freqs = ['4M', 'D', 'M', 'Y']
+
+# Approach for the covariance Matrix:
+covs = ['amo', 'led']
 
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 ' # Search: # '
@@ -356,14 +367,30 @@ parameters = {
 class Search():
     @staticmethod
     def search(ret, freq, ext = '.parquet'):
+        if ret in portfolios:
+            df = globals()[ret]
+            if  freq == 'D':
+                return df
+            else: 
+                df = resample_returns(df, freq)
+                return df
         ret_dict = {
+            
             'f': ['fac', 'factors'],
             'e': ['exp', 'expected']
         }
         path = f'{os.getcwd()}//Regression//{freq}//{ret_dict[ret][0]}//{ret_dict[ret][1]}{ext}'
         try: df = pd.read_parquet(path)
         except: df = pd.read_csv(path)
+        df.index = pd.to_datetime(df.index)
         return df
+    def names_for_eff():
+        names = [(portfolio, freq, betas, parameters, window, cov) 
+        for portfolio in portfolios 
+        for freq in freqs
+        for cov in covs]
+        return names
+        
 
     
 
