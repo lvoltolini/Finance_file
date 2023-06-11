@@ -31,7 +31,8 @@ packages_install_names = {
     'yfinance' : 'yfinance',
     'bcb': 'python-bcb',
     'investpy': 'investpy',
-    'datetime': 'datetime'
+    'datetime': 'datetime',
+    'plotly': 'plotly'
 }
 
 
@@ -80,7 +81,8 @@ packages_import_names = {
     'yfinance': 'yf',
     'investpy': 'investpy',
     'bcb.sgs': 'sgs',
-    'datetime': 'dt'
+    'datetime': 'dt',
+    'plotly.express': 'px'
 }
 
 ## Funzione per importare i pacchetti:

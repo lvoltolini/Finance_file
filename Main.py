@@ -20,48 +20,69 @@ div = 80 * '-'
 # # Frequenze dei dati
 # freqs= ['D', 'M', '4M', 'Y']
 
+while True:
+    # Chiedo all'utente se vuole avviare la modalità debug della regressione
+    answer_ols_debug_info = OLS.DEBUG_OLS_INFO()
 
-# Chiedo all'utente se vuole avviare la modalità debug della regressione
-answer_ols_debug_info = OLS.DEBUG_OLS_INFO()
+    if answer_ols_debug_info.lower() == 's':
+        # Salvo tutti i risultati per tutte le frequenze
+        for freq in freqs:
+            OLS.SAVE_ALL_ITEMS_IN_OLS(nefin, stocks, betas, freq)
+    elif answer_ols_debug_info in freqs:
+        # Salvo tutti i risultati solo per la frequenza specificata
+        OLS.SAVE_ALL_ITEMS_IN_OLS(nefin, stocks, betas, answer_ols_debug_info)
 
-if answer_ols_debug_info == 's':
-    # Salvo tutti i risultati per tutte le frequenze
-    for freq in freqs:
-        OLS.SAVE_ALL_ITEMS_IN_OLS(nefin, stocks, betas, freq)
-elif answer_ols_debug_info in freqs:
-    # Salvo tutti i risultati solo per la frequenza specificata
-    OLS.SAVE_ALL_ITEMS_IN_OLS(nefin, stocks, betas, answer_ols_debug_info)
+    # Chiedo all'utente se vuole avviare la modalità debug della Efficient Frontier
+    answer_eff_debug_info = Portfolios.DEBUG_EFF_INFO()
 
-# Chiedo all'utente se vuole avviare la modalità debug della Efficient Frontier
-answer_eff_debug_info = Portfolios.DEBUG_EFF_INFO()
-
-if answer_eff_debug_info == 's':
-    
-    # Salvo tutti i risultati per tutte le parameters
-    for element in Search.names_for_eff():
+    if answer_eff_debug_info.lower() == 's':
+        
+        # Salvo tutti i risultati per tutte le parameters
+        for element in Search.names_for_eff():
+            Portfolios.save_efficient_frontier_calculations(
+                Search.search(element[0], element[1]),
+                            element[0],
+                            element[1], 
+                            element[2], 
+                            element[3], 
+                            element[4], 
+                            element[5])
+            
+    elif answer_eff_debug_info in portfolios:
+        # Salvo tutti i risultati dalle informazioni fornite
+        ret = answer_eff_debug_info
+        freq = input('Provide una frequenza: ')
+        cov = input('Provide una matrice di covarianza: ')
         Portfolios.save_efficient_frontier_calculations(
-            Search.search(element[0], element[1]),
-                        element[0],
-                        element[1], 
-                        element[2], 
-                        element[3], 
-                        element[4], 
-                        element[5])
+            Search.search(ret, freq),
+            ret,
+            freq,
+            betas,
+            parameters,
+            window,
+            cov
+        )
         
-elif answer_eff_debug_info in portfolios:
-    # Salvo tutti i risultati dalle informazioni fornite
-    ret = answer_eff_debug_info
-    freq = input('Provide una frequenza: ')
-    Portfolios.save_efficient_frontier_calculations(
-        Search.search(ret, freq),
-        ret,
-        freq,
-        betas,
-        parameters,
-        window,
-        input('Provide una matrice di covarianza: ')
-    )
-        
+    elif answer_eff_debug_info in freqs:
+        daily_date_cov = False
+        allow_adjust_cov = input('Cambia la cov matrix per dati giornalieri? ').lower()
+        if allow_adjust_cov == 's':
+            daily_date_cov = True 
+        for portfolio in portfolios:
+            for cov in covs:
+                Portfolios.save_efficient_frontier_calculations(
+                    Search.search(portfolio, answer_eff_debug_info),
+                    portfolio,
+                    answer_eff_debug_info,
+                    betas,
+                    parameters,
+                    window,
+                    cov,
+                    daily_date_cov = daily_date_cov,
+                    show_before_save = False
+                )
+            
+            
 
-# Chiedo all'utente di premere un tasto per terminare il programma
-input('O Programa foi finalizado. Pressione uma tecla para encerrar o programa: ')
+    # Chiedo all'utente di premere un tasto per terminare il programma
+    input('O Programa foi finalizado. Pressione uma tecla para encerrar o programa: ')

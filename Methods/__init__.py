@@ -80,6 +80,7 @@ def resample_returns(df, period:str):
     "Monthly: 'M'"
     "Quadrimester: '4M'"
     df1 = df.copy()
+    df1.index = pd.to_datetime(df1.index)
     df1 = df1+1
     df1 = df1.resample(period).prod()
     df1 = df1 - 1
@@ -288,9 +289,9 @@ r21, r22, r41 = (
     lock_dates(read_Economatica(ret[2], 'ret')/100)
 )
 
-update_asai_pcar = input('Fix the Data? [S/n]')
+update_asai_pcar = True # input('Fix the Data? [S/n]')
 
-if update_asai_pcar.upper() == 'S':
+if update_asai_pcar:
     r21['PCAR3'][:'2020-02-27'] = np.nan
     r22['PCAR3'][:'2020-02-27'] = np.nan
     r21['ASAI3'][:'2021-03-01'] = np.nan
@@ -308,10 +309,13 @@ stocks = pd.concat(
 ).T.drop_duplicates().T
 
 # df Nefin
-nefin = merge_nefins(urls) # Creare lo df
-nefin = added_minus(nefin) # Adizionare lo "minus"
-nefin = lock_dates(nefin) # Lock the dates to '2014-05-02':'2022-08-31'
-nefin = nefin.drop([i for i in nefin.index if i not in stocks.index])
+try: nefin = pd.read_parquet('nefin.parquet')
+except: 
+    nefin = merge_nefins(urls) # Creare lo df
+    nefin = added_minus(nefin) # Adizionare lo "minus"
+    nefin = lock_dates(nefin) # Lock the dates to '2014-05-02':'2022-08-31'
+    nefin = nefin.drop([i for i in nefin.index if i not in stocks.index])
+    nefin.to_parquet('nefin.parquet')
 
 # Betas e nome di Regressioni.
 betas = {
@@ -360,6 +364,11 @@ freqs = ['4M', 'D', 'M', 'Y']
 # Approach for the covariance Matrix:
 covs = ['amo', 'led']
 
+# Update stocks:
+stocks = pd.concat([
+    stocks, nefin['Risk_free']
+], axis = 1)
+
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 ' # Search: # '
 '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
@@ -377,13 +386,23 @@ covs = ['amo', 'led']
     
 class Search():
     @staticmethod
-    def search(ret, freq, ext = '.parquet'):
+    def search(ret, freq, ext = '.parquet', add_risk_free = True):
+        if ret == '':
+            df = stocks
+            if freq != 'D':
+                df = resample_returns(df, freq)
+            return df
         if ret in portfolios:
             df = globals()[ret]
             if  freq == 'D':
+                if add_risk_free:
+                    df = pd.concat([df, nefin['Risk_free']], axis = 1)
                 return df
             else: 
                 df = resample_returns(df, freq)
+                if add_risk_free:
+                    n = resample_returns(nefin, freq)['Risk_free']
+                    df = pd.concat([df, n], axis = 1)
                 return df
         ret_dict = {
             
@@ -394,7 +413,45 @@ class Search():
         try: df = pd.read_parquet(path)
         except: df = pd.read_csv(path)
         df.index = pd.to_datetime(df.index)
+        if add_risk_free:
+            n = pd.DataFrame( columns = pd.MultiIndex.from_product([['Risk_free'], list(betas.keys())]))
+            if  freq == 'D':
+                for col in n.columns:
+                    n[col] = nefin['Risk_free'].shift()
+            else:                
+                for col in n.columns:
+                    n[col] = resample_returns(nefin, freq)['Risk_free'].shift()
+        df = pd.concat(
+            [df, n], axis = 1
+        )
         return df
+    
+    @staticmethod
+    def Portfolios(option, freq, folder = None, port = None, cov = None, ext = '.parquet', name_of_data = 'raw', add_risk_free = True):
+        # To Access the consolidated data of returns:
+        dictionary_of_keys = {
+            'r': f'//Portfolios//portfolios_{name_of_data}_returns_{freq}{ext}',
+            'w': f'//Portfolios//portfolios_{name_of_data}_wealth_{freq}{ext}',
+            'weights': f'//Portfolios//{folder}//eff_{port}_{freq}_{cov}{ext}',
+            'e': f'//Errors//err_{port}_{freq}_{cov}{ext}'
+            
+        }
+        path = f'{os.getcwd()}{dictionary_of_keys[option]}'
+        try: df = pd.read_parquet(path)
+        except: df = pd.read_csv(path)
+        return df
+    
+    def Errors(ret, freq, ext = '.parquet', add_risk_free = True):
+        # To Access the consolidated data of returns:
+        dictionary_of_keys = {
+            'r': f'portfolios_raw_returns_{freq}{ext}',
+            'w': f'portfolios_raw_wealth_{freq}{ext}'
+        }
+        path = f'{os.getcwd()}//Errors//{dictionary_of_keys[ret]}'
+        try: df = pd.read_parquet(path)
+        except: df = pd.read_csv(path)
+        return df
+        
     def names_for_eff():
         names = [(portfolio, freq, betas, parameters, window, cov) 
         for portfolio in portfolios 
